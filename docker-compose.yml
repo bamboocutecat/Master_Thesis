@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  siam:
+    image: siam
+    build:
+      context: .
+      dockerfile: Dockerfile
