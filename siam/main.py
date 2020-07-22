@@ -1,7 +1,11 @@
 # owner Jules 曾筠筑
+import sys
+sys.path.append('cocoapi/PythonAPI')
 import tensorflow as tf
 import data_loader
 import numpy as np
+from pycocotools.coco import COCO
+
 
 
 def siamese(left_input_shape, right_input_shape):
@@ -32,9 +36,10 @@ def siamese(left_input_shape, right_input_shape):
 
     # 200719
     feature_vector_left_filter = tf.reshape(feature_vector_left, shape=(
-        feature_vector_left.shape[1], feature_vector_left.shape[2], 256, 1))
+        feature_vector_left.shape[1], feature_vector_left.shape[2], 256, 128))
+
     heatmap = tf.keras.backend.conv2d(
-        feature_vector_right, feature_vector_left_filter,  strides=(1, 1), padding='same', data_format='channels_last', dilation_rate=(1, 1))
+        feature_vector_right, feature_vector_left_filter,  strides=(1, 1), padding='valid', data_format='channels_last', dilation_rate=(1, 1))
 
     
     # 200719
@@ -50,14 +55,21 @@ def siamese(left_input_shape, right_input_shape):
     resized_heatmap = tf.keras.layers.experimental.preprocessing.Resizing(
         right_input.shape[1], right_input.shape[2])(heatmap)
 
+    convt1= tf.keras.layers.Conv2DTranspose(64 ,(3,3),strides=(2, 2),padding='same')(heatmap)
+    convt2= tf.keras.layers.Conv2DTranspose(32 ,(3,3),strides=(2, 2),padding='same')(convt1)
+    # convt3= tf.keras.layers.Conv2DTranspose(36 ,(3,3),strides=(2, 2),padding='same')(convt2)
+    convt3= tf.keras.layers.Conv2DTranspose(1 ,(3,3),strides=(2, 2),padding='same')(convt2)
+    
+    output = tf.keras.layers.experimental.preprocessing.Resizing(256,256,interpolation='bilinear')(convt3)
+
     siamese_network = tf.keras.Model(
-        inputs=[left_input, right_input], outputs=resized_heatmap)
+        inputs=[left_input, right_input], outputs=output)
 
     # TODO 輸出應為heatmap
     return siamese_network
 
 
-model = siamese((105, 105, 1), (200, 200, 1))
+model = siamese((105, 105, 1), (256, 256, 1))
 model.summary()
 
 # optimizer = tf.keras.optimizers.Adagrad(lr=0.001)

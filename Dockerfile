@@ -31,10 +31,17 @@ RUN source activate workenv\
 && conda install -y pylint\
 && conda install -y tensorflow\
 && conda install -y rope\
-&& conda install -y autopep8
+&& conda install -y autopep8\
+&& conda install -y matplotlib\
+&& pip install cpython
+
 
 RUN apt-get update -y
 RUN apt-get install git -y
+RUN apt-get install  gcc automake autoconf libtool make -y
+
+WORKDIR /siam/cocoapi/PythonAPI
+RUN make
 
 ADD siam /siam/
 WORKDIR /siam
